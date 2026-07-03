@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" >
+        <link rel="icon" type="imagem/png" href="img/icon.png">
+        <title>Declara Água Gerencial</title>
+
+        <!-- GOOGLE FONT -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+        <!-- FONT AWESOME -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" >
+
+        <!-- JS -->
+        <script src="js/login.js"></script>
+
+        <!-- TOASTR CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="css/style_login.css" >
+        
+        <style>
+            #tela {
+                zoom: 0.8;
+            }
+        </style>
+
+    </head>
+
+    <body>
+        <div id="tela">
+        <div class="container">
+            <!-- LEFT -->
+            <div class="left">
+                <div class="form-wrapper">
+                    <!-- LOGO -->
+                    <div class="logo-area">
+                        <img src="img/logo_gerencial.png" alt="Declara Água" style="width: 375px;">
+                    </div>
+
+                    <!-- TITLE -->
+                    <h1 class="title" style="font-size: 25px; text-align: center;">Sistema de Acompanhamento de DURH Mensal</h1>
+                    <p class="subtitle" id="formSubtitle">Faça login para acessar o sistema</p>
+
+                    <!-- FORM -->
+                    <form id="loginForm">
+                        <!-- CPF -->
+                        <div class="form-group">
+                            <label>CPF</label>
+                            <div class="input-box">
+                                <input type="text" id="cpf" placeholder="000.000.000-00" maxlength="14" required >
+                            </div>
+                        </div>
+                        <!-- SENHA -->
+                        <div class="form-group" id="senhaGroup">
+                            <label>Senha</label>
+                            <div class="input-box">
+                                <input type="password" id="senha" placeholder="Digite sua senha" required >
+                                <span id="togglePassword" class="toggle-password" >
+                                    <i class="fa-solid fa-eye"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- EMAIL (recuperação — oculto por padrão) -->
+                        <div class="form-group" id="emailGroup" style="display:none;">
+                            <label>E-mail cadastrado</label>
+                            <div class="input-box">
+                                <input type="email" id="emailRecuperacao" placeholder="seu@email.com.br" autocomplete="email">
+                            </div>
+                        </div>
+
+                        <!-- OPTIONS -->
+                        <div class="options" id="optionsDiv">
+                            <a href="#" id="forgotLink" onclick="showRecovery(); return false;">Esqueceu sua senha?</a>
+                        </div>
+
+                        <!-- BOTÃO VOLTAR (recuperação — oculto por padrão) -->
+                        <button class="btn-voltar" type="button" id="btnVoltar" style="display:none;" onclick="showLogin()">
+                            <i class="fa fa-arrow-left"></i> <span style="font-size: 19px;">Voltar ao Login</span> 
+                        </button>
+
+                        <!-- BUTTON -->
+                        <button class="login-btn" type="submit" id="loginBtn">
+                            <span id="btnLabel">Entrar &nbsp;<i class="fa fa-sign-in"></i></span>
+                        </button>
+                    </form>
+
+                    <!-- FOOTER -->
+                    <div class="footer-links">
+                        <p>
+                            Ao continuar você concorda com nossos
+                            <a href="#">
+                                Termos de Uso
+                            </a>
+                            e
+                            <a href="#">
+                                Política de Privacidade
+                            </a>
+                        </p>
+                        <p class="copyright">
+                            © 2026 Declara Água Gerencial
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT -->
+            <div class="right">
+                <div class="glass-card">
+                    <!-- CAROUSEL -->
+                    <div class="carousel">
+                        <!-- SLIDE 1 -->
+                        <div class="slide active">
+                            <img src="img/dashboard-1.png" class="dashboard-image" alt="Dashboard">
+                            <h2>Conformidade Regulatória</h2>
+                            <p>Monitoramento e gerenciamento dos usuários, equipamentos e leituras de medição.</p>
+                        </div>
+                        <!-- SLIDE 2 -->
+                        <div class="slide">
+                            <img src="img/dashboad-2_.png" class="dashboard-image" alt="Consistencia" >
+                            <h2>Declarações Mensais</h2>
+                            <p>Visualização das fotos dos medidores, ajustes e correções (Consistência das Leituras).</p>
+                        </div>
+                        <!-- SLIDE 3 -->
+                        <div class="slide">
+                            <img src="img/dashboard-3.png" class="dashboard-image" alt="Relatórios" >
+                            <h2>Relatórios e Gráficos</h2>
+                            <p>Geração de relatórios de indicadores, métricas e consumo hídrico.</p>
+                        </div>                        
+                    </div>
+                    <!-- DOTS -->
+                    <div class="dots">
+                        <div class="dot active"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>                    
+                </div>
+                <div style="display: flex; justify-content: center; margin-top: 100px;">
+                    <img src="img/logo_ana-branco.svg" alt="ANA" style="width: 200px;">
+                </div>
+            </div>
+
+        </div>
+        </div>
+        
+        <!-- JQUERY & TOASTR JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+        
+        <!-- JS -->
+        <script src="js/script.js"></script>
+    </body>
+</html>

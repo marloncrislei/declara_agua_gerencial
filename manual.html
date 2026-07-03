@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Manual do Usuário | Declara Água Gerencial</title>
+<link rel="icon" type="image/png" href="img/icon.png" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rawline:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+    :root {
+        --navy: #1c3782;
+        --navy-dark: #142a61;
+        --navy-light: #e9efff;
+        --ink: #1f2937;
+        --muted: #62708a;
+        --line: #e4e9f2;
+        --green: #1f9254;
+        --red: #c8394a;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: 'Rawline', 'Raleway', "Open Sans", Arial, sans-serif;
+        color: var(--ink);
+        background: #f4f6fb;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    /* ===== HEADER ===== */
+    .manual-header {
+        background: linear-gradient(135deg, var(--navy), var(--navy-dark));
+        color: #fff;
+        padding: 18px 28px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        box-shadow: 0 6px 18px -10px rgba(0,0,0,.4);
+    }
+    .manual-header img { height: 34px; }
+    .manual-header h1 {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0;
+        flex: 1;
+    }
+    .manual-header .subtitulo {
+        display: block;
+        font-size: 12px;
+        font-weight: 400;
+        opacity: .85;
+        margin-top: 2px;
+    }
+    .btn-voltar {
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.35);
+        color: #fff;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: background .15s;
+        white-space: nowrap;
+    }
+    .btn-voltar:hover { background: rgba(255,255,255,.22); color: #fff; }
+
+    /* ===== LAYOUT ===== */
+    .manual-layout {
+        display: flex;
+        max-width: 1280px;
+        margin: 0 auto;
+        align-items: flex-start;
+    }
+    .manual-toc {
+        width: 270px;
+        flex-shrink: 0;
+        position: sticky;
+        top: 78px;
+        max-height: calc(100vh - 78px);
+        overflow-y: auto;
+        padding: 24px 16px 40px;
+    }
+    .manual-toc h2 {
+        font-size: 11px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-weight: 700;
+        margin: 0 0 10px 8px;
+    }
+    .manual-toc ul { list-style: none; margin: 0 0 18px; padding: 0; }
+    .manual-toc li a {
+        display: block;
+        padding: 7px 10px;
+        border-radius: 7px;
+        color: var(--ink);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .manual-toc li a:hover { background: var(--navy-light); color: var(--navy); }
+    .manual-toc li a.nivel2 { padding-left: 22px; font-size: 12.5px; font-weight: 400; color: var(--muted); }
+
+    .manual-conteudo {
+        flex: 1;
+        min-width: 0;
+        padding: 24px 28px 80px;
+    }
+
+    /* ===== SEÇÕES ===== */
+    .secao {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 26px 30px;
+        margin-bottom: 22px;
+        box-shadow: 0 10px 30px -26px rgba(20,40,90,.4);
+    }
+    .secao h2 {
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--navy);
+        margin: 0 0 6px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .secao h2 .num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px; height: 28px;
+        border-radius: 50%;
+        background: var(--navy);
+        color: #fff;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+    .secao .lead {
+        color: var(--muted);
+        font-size: 13.5px;
+        margin: 0 0 18px;
+    }
+    .secao h3 {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--ink);
+        margin: 22px 0 8px;
+    }
+    .secao h3:first-of-type { margin-top: 4px; }
+    .secao p { margin: 0 0 12px; }
+    .secao ul, .secao ol { margin: 0 0 14px; padding-left: 22px; }
+    .secao li { margin-bottom: 5px; }
+    .secao table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+        margin: 10px 0 18px;
+    }
+    .secao thead th {
+        background: var(--navy-light);
+        color: var(--navy);
+        text-align: left;
+        font-weight: 700;
+        padding: 9px 12px;
+        border-bottom: 2px solid var(--line);
+    }
+    .secao tbody td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+    }
+    .secao tbody tr:nth-child(even) { background: #fafbfd; }
+    code, .tecla {
+        font-family: "Consolas", "IBM Plex Mono", monospace;
+        background: #eef1f7;
+        color: #33405c;
+        padding: 1px 6px;
+        border-radius: 5px;
+        font-size: 12px;
+    }
+
+    /* ===== CALLOUTS ===== */
+    .callout {
+        border-radius: 9px;
+        padding: 12px 16px;
+        font-size: 13px;
+        margin: 12px 0 18px;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    .callout i { margin-top: 2px; flex-shrink: 0; }
+    .callout.root { background: #fff4e0; border: 1px solid #f0cf8a; color: #8a5a00; }
+    .callout.info { background: var(--navy-light); border: 1px solid #c7d4f5; color: var(--navy-dark); }
+    .callout.tip { background: #e8f6ee; border: 1px solid #b9e3c8; color: #1f6e3f; }
+
+    .badge-perfil {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: var(--navy);
+        color: #fff;
+        font-size: 10.5px;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 99px;
+        white-space: nowrap;
+    }
+
+    /* mini-botões ilustrativos, mesmo padrão .eq-ab da aplicação */
+    .demo-acoes { display: inline-flex; gap: 7px; align-items: center; vertical-align: middle; }
+    .demo-ab {
+        width: 30px; height: 27px; border-radius: 6px; border: 0;
+        display: inline-grid; place-items: center; background: var(--navy); color: #fff;
+    }
+    .demo-ab--round { border-radius: 50%; width: 27px; }
+
+    .status-ok { color: var(--green); }
+    .status-no { color: var(--red); }
+    .status-warn { color: #d4920a; }
+
+    .glossario dt { font-weight: 700; color: var(--navy); margin-top: 10px; }
+    .glossario dd { margin: 2px 0 0; color: var(--ink); }
+
+    .voltar-topo {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--muted);
+        text-decoration: none;
+        margin-top: 4px;
+    }
+    .voltar-topo:hover { color: var(--navy); }
+
+    @media (max-width: 900px) {
+        .manual-toc { display: none; }
+        .manual-conteudo { padding: 20px 16px 60px; }
+    }
+</style>
+</head>
+<body>
+
+    <header class="manual-header">
+        <img src="images/logo_gerencial_menu.png" onerror="this.style.display='none'" alt="">
+        <h1 style="padding-left: 50px;">Manual do Usuário
+            <span class="subtitulo">Declara Água Gerencial — ferramenta de apoio ao aplicativo móvel DeclaraÁgua</span>
+        </h1>
+        <a href="index.html" class="btn-voltar"><i class="fa fa-arrow-left"></i> Voltar à aplicação</a>
+    </header>
+
+    <div class="manual-layout">
+        <nav class="manual-toc">
+            <h2>Sumário</h2>
+            <ul>
+                <li><a href="#introducao">Introdução</a></li>
+                <li><a href="#acesso">1. Acesso ao sistema</a></li>
+                <li><a href="#navegacao">2. Navegando pela aplicação</a></li>
+                <li><a href="#interferencias">3. Lista de Interferências</a></li>
+                <li><a href="#equipamentos">4. Lista de Equipamentos</a></li>
+                <li><a href="#detalhar-equipamento">5. Detalhar Equipamento</a></li>
+                <li><a href="#consistencia">6. Consistência das Leituras</a></li>
+                <li><a href="#chaves">7. Chaves de Acesso <span class="badge-perfil" style="margin-left:4px;">Root</span></a></li>
+                <li><a href="#identificacao">8. Identificação/Edição de Equipamento <span class="badge-perfil" style="margin-left:4px;">Gestor</span></a></li>
+                <li><a href="#acessibilidade">9. Acessibilidade e preferências</a></li>
+                <li><a href="#glossario">10. Glossário</a></li>
+            </ul>
+        </nav>
+
+        <main class="manual-conteudo">
+
+            <div style="text-align:center; margin-bottom:22px;">
+                <img src="images/logo_gerencial_menu.png" alt="Declara Água Gerencial" style="max-width:280px; width:100%; height:auto;">
+            </div>
+
+            <section class="secao" id="introducao">
+                <h2><span class="num"><i class="fa fa-tint"></i></span>Introdução</h2>
+                <p>O <strong>Declara Água Gerencial</strong> é a ferramenta web de apoio administrativo ao aplicativo móvel <strong>DeclaraÁgua</strong>. Enquanto o aplicativo de celular é usado pelos usuários outorgados para registrar leituras de equipamentos de medição (hidrômetros, horímetros, bombas etc.) e enviar fotos dos medidores, esta ferramenta gerencial é usada pelos <strong>órgãos gestores de recursos hídricos</strong> (ANA, NATURATINS, SP ÁGUAS, INEA) para acompanhar essas declarações, consistir leituras, gerenciar interferências e equipamentos, e administrar chaves de acesso ao aplicativo.</p>
+                <div class="callout info">
+                    <i class="fa fa-info-circle"></i>
+                    <div>Este manual descreve a tela <strong>Declara Água Gerencial</strong> (uso interno dos órgãos gestores). Ele não cobre o aplicativo móvel utilizado pelos usuários outorgados.</div>
+                </div>
+            </section>
+
+            <section class="secao" id="acesso">
+                <h2><span class="num">1</span>Acesso ao sistema</h2>
+                <p class="lead">Tela de login, recuperação de senha e seleção do perfil de acesso.</p>
+
+                <h3>1.1 Login</h3>
+                <p>Na tela inicial (<code>login.html</code>), informe:</p>
+                <ul>
+                    <li><strong>CPF</strong> — com máscara automática <code>000.000.000-00</code>.</li>
+                    <li><strong>Senha</strong> — com botão de mostrar/ocultar (ícone de olho).</li>
+                </ul>
+                <p>Clique em <strong>Entrar</strong>. Se as credenciais forem válidas, uma mensagem de sucesso é exibida e você é redirecionado automaticamente para a aplicação principal. Se inválidas, uma mensagem de erro é exibida e você pode tentar novamente.</p>
+
+                <div class="callout info">
+                    <i class="fa fa-info-circle"></i>
+                    <div><strong>Obs.:</strong> o cadastro do usuário deverá ser prévio junto ao sistema de autenticação da Agência Nacional de Águas e Saneamento Básico - ANA. A solicitação deverá ser direcionada aos gestores da ANA (Coordenação de Fiscalização de Uso da Superintendência de Fiscalização - SFI).</div>
+                </div>
+
+                <h3>1.2 Esqueceu sua senha?</h3>
+                <p>Clique no link <strong>"Esqueceu sua senha?"</strong>, abaixo do formulário. O campo de senha é substituído por um campo de <strong>e-mail</strong>; informe o e-mail cadastrado e clique em <strong>Enviar Nova Senha</strong>. O sistema confirma se o envio foi bem-sucedido ou avisa caso o e-mail não corresponda ao cadastro. Use <strong>Voltar ao Login</strong> para retornar ao formulário normal.</p>
+
+                <h3>1.3 Seleção de perfil</h3>
+                <p>Um mesmo usuário pode ter mais de um perfil cadastrado (por exemplo, acesso a mais de um órgão gestor, ou perfis de edição e de visualização). Após o login, clique no indicador de perfil no canto superior da aplicação para abrir a lista de perfis disponíveis e trocar o perfil ativo — a página é recarregada ao trocar.</p>
+
+                <table>
+                    <thead><tr><th>Perfil</th><th>Órgão</th><th>Permissão</th></tr></thead>
+                    <tbody>
+                        <tr><td>Gestor Federal</td><td>ANA</td><td>Edição e visualização</td></tr>
+                        <tr><td>Gestor TO</td><td>NATURATINS</td><td>Edição e visualização</td></tr>
+                        <tr><td>Gestor SP</td><td>SP ÁGUAS</td><td>Edição e visualização</td></tr>
+                        <tr><td>Gestor RJ</td><td>INEA</td><td>Edição e visualização</td></tr>
+                        <tr><td>Visualização Federal</td><td>ANA</td><td>Somente visualização</td></tr>
+                        <tr><td>Visualização TO</td><td>NATURATINS</td><td>Somente visualização</td></tr>
+                        <tr><td>Visualização SP</td><td>SP ÁGUAS</td><td>Somente visualização</td></tr>
+                        <tr><td>Visualização RJ</td><td>INEA</td><td>Somente visualização</td></tr>
+                        <tr><td>Perfil Administrativo Restrito</td><td>ANA</td><td>Edição e acesso a recursos administrativos restritos (ver seções 7 e 8)</td></tr>
+                    </tbody>
+                </table>
+                <p>O perfil ativo determina quais dados você visualiza (restritos ao seu órgão gestor) e se os recursos de edição/administração ficam disponíveis.</p>
+            </section>
+
+            <section class="secao" id="navegacao">
+                <h2><span class="num">2</span>Navegando pela aplicação</h2>
+                <p class="lead">Estrutura do menu lateral e dos botões do cabeçalho.</p>
+
+                <h3>2.1 Menu lateral</h3>
+                <p>O menu lateral está organizado em seções:</p>
+                <ul>
+                    <li><strong>Navegação</strong> — Lista de Interferências e Lista de Equipamentos.</li>
+                    <li><strong>Ferramentas</strong> — Consistência das Leituras, Detalhar Interferência, Detalhar Equipamento, Painel BI.</li>
+                    <li><strong>Administração</strong> — Chaves de Acesso (visível apenas para o Perfil Administrativo Restrito).</li>
+                </ul>
+                <div class="callout tip">
+                    <i class="fa fa-lightbulb-o"></i>
+                    <div><strong>Detalhar Interferência</strong> e <strong>Detalhar Equipamento</strong> ficam desabilitados até que você selecione uma linha na respectiva tabela (Lista de Interferências ou Lista de Equipamentos).</div>
+                </div>
+
+                <h3>2.2 Cabeçalho</h3>
+                <ul>
+                    <li><i class="fa fa-sign-out"></i> <strong>Sair</strong> — encerra a sessão e limpa os dados de autenticação salvos no navegador, retornando à tela de login.</li>
+                    <li><i class="fa fa-adjust"></i> <strong>Contraste</strong> — ativa/desativa o modo de alto contraste (fundo preto, texto e bordas em amarelo), preferência salva no navegador.</li>
+                    <li><i class="fa fa-file-text-o"></i> <strong>Manual</strong> — abre este manual em uma nova aba.</li>
+                </ul>
+            </section>
+
+            <section class="secao" id="interferencias">
+                <h2><span class="num">3</span>Lista de Interferências</h2>
+                <p class="lead">Tela inicial da aplicação. Lista as interferências (captações, lançamentos etc.) com obrigatoriedade de monitoramento.</p>
+
+                <h3>3.1 Filtros</h3>
+                <p>Clique no cabeçalho "Filtros" para expandir/recolher o painel. Campos disponíveis: <strong>Usuário (CPF/CNPJ)</strong>, <strong>Usuário Nome</strong>, <strong>NU_CNARH</strong>, <strong>Empreendimento</strong>, <strong>Número Interferência</strong>, <strong>Bacia ou Sistema Hídrico</strong>, <strong>Corpo Hídrico</strong>, <strong>Irregularidade</strong> e <strong>Envio Obrigatório</strong>.</p>
+                <p>Botões: <strong>Buscar</strong> aplica os filtros; <strong>Limpar Pesquisa</strong> reseta todos os campos; <strong>Exibir Resultado no Mapa</strong> (habilitado após uma busca) plota todos os resultados filtrados em um único mapa.</p>
+
+                <h3>3.2 Tabela e ações por linha</h3>
+                <p>Cada linha mostra a situação de regularidade da interferência (<i class="fa fa-check status-ok"></i> regular / <i class="fa fa-ban status-no"></i> irregular), dados do usuário, empreendimento, bacia e se o envio de leituras é obrigatório. Na coluna <strong>Ações</strong>:</p>
+                <p>
+                    <span class="demo-acoes">
+                        <span class="demo-ab demo-ab--round"><i class="fa fa-info" style="font-size:11px;"></i></span>
+                        <span class="demo-ab"><i class="fa fa-map-marker" style="font-size:12px;"></i></span>
+                    </span>
+                    &nbsp; <strong>Detalhar interferência</strong> (ícone "i") abre um modal com nome da interferência, data da última leitura, data de enquadramento, latitude/longitude e justificativa. <strong>Ver no mapa</strong> (pino) mostra a localização daquela interferência isoladamente.
+                </p>
+                <p>Um clique simples na linha a seleciona, habilitando o item de menu <strong>Detalhar Interferência</strong>. Um duplo clique abre diretamente a <strong>Lista de Equipamentos</strong> já filtrada por aquele número de interferência.</p>
+
+                <h3>3.3 Exportar e mapa de resultados</h3>
+                <p>O botão <strong>Exportar Excel</strong> gera uma planilha com os dados filtrados (nome do arquivo com data/hora). O mapa de resultados agrupa pontos próximos em <em>clusters</em> e oferece controles de camadas e legenda (regular/irregular).</p>
+                <p><a class="voltar-topo" href="#interferencias">↑ voltar ao topo da seção</a></p>
+            </section>
+
+            <section class="secao" id="equipamentos">
+                <h2><span class="num">4</span>Lista de Equipamentos</h2>
+                <p class="lead">Lista todos os equipamentos de medição cadastrados, com indicação de status de consistência das leituras.</p>
+
+                <h3>4.1 Filtros</h3>
+                <p>Campos: <strong>Usuário (CPF/CNPJ)</strong>, <strong>Usuário Nome</strong>, <strong>NU_CNARH (Código Empre.)</strong>, <strong>Nome do Empreendimento</strong>, <strong>Numero Interferência</strong>, <strong>Nome Equip. (Captação, Bomba)</strong>, <strong>Bacia ou Sistema Hídrico</strong>, <strong>Corpo Hídrico</strong>, além de filtros avançados: <strong>Qtde. mínima de leituras</strong>, <strong>Mínimo de dias de atraso</strong> e <strong>Tipo de Equipamento</strong>.</p>
+                <p>Botões <strong>Buscar</strong> e <strong>Limpar Pesquisa</strong> funcionam como na Lista de Interferências.</p>
+
+                <h3>4.2 Tabela e ações por linha</h3>
+                <p>O ícone de status indica: <i class="fa fa-check status-ok"></i> todas as leituras consistidas, <i class="fa fa-exclamation-triangle status-warn"></i> leituras pendentes, <i class="fa fa-times status-no"></i> sem leitura transmitida.</p>
+                <p>
+                    <span class="demo-acoes">
+                        <span class="demo-ab demo-ab--round"><i class="fa fa-info" style="font-size:11px;"></i></span>
+                        <span class="demo-ab"><i class="fa fa-sliders" style="font-size:12px;"></i></span>
+                    </span>
+                    &nbsp; <strong>Detalhar equipamento</strong> (ícone "i") abre um modal com a foto do equipamento, ID e identificação. O botão <strong>Alterar tipo/unidade do equipamento</strong> (sliders) está disponível aos perfis <span class="badge-perfil">Gestor</span> (Federal/ANA, TO, SP, RJ e Root) — veja a seção 8.
+                </p>
+                <p>Um clique simples seleciona a linha e habilita <strong>Detalhar Equipamento</strong> no menu lateral; um duplo clique abre essa view diretamente.</p>
+                <p><a class="voltar-topo" href="#equipamentos">↑ voltar ao topo da seção</a></p>
+            </section>
+
+            <section class="secao" id="detalhar-equipamento">
+                <h2><span class="num">5</span>Detalhar Equipamento</h2>
+                <p class="lead">Visão completa de um equipamento específico: dados cadastrais, histórico de leituras e gráfico de calendário.</p>
+
+                <h3>5.1 Dados e gráfico</h3>
+                <p>No topo são exibidos: nome do equipamento, empreendimento, NU_CNARH, tipo de equipamento, interferência, corpo hídrico, usuário responsável, órgão gestor, CPF/CNPJ, bacia, unidade de medida e data de instalação. Abaixo, um <strong>gráfico de calendário</strong> mostra visualmente os dias com leitura registrada.</p>
+
+                <h3>5.2 Filtro "Leitura Bruta"</h3>
+                <p>Ao marcar essa opção, a tabela passa a mostrar apenas as leituras ainda não consistidas (qualificadas).</p>
+
+                <h3>5.3 Exportar dados</h3>
+                <ul>
+                    <li><strong>Exportar Excel</strong> — gera planilha com as leituras exibidas, nome do arquivo com data/hora.</li>
+                    <li><strong>Baixar Fotos das Leituras</strong> — baixa um arquivo .zip com as fotos de todas as leituras listadas.</li>
+                </ul>
+
+                <h3>5.4 Consistir uma leitura</h3>
+                <p>Clique em uma linha da tabela para abrir o modal de qualificação da leitura, com a foto do medidor e os campos: <strong>Leitura Bruta</strong>, <strong>Leitura Consistida</strong>, <strong>Leitura Válida</strong>, <strong>Observação/Ocorrência</strong> e <strong>Comentário do Operador</strong>. Use os botões auxiliares ao lado da leitura bruta para copiá-la ou cortar o último dígito.</p>
+                <p>Clique em <strong>Salvar e Carregar Próxima</strong> para gravar a consistência e já abrir a próxima leitura pendente, ou em <strong>Próxima</strong> para avançar sem salvar. O botão de compartilhamento ao lado do nome da captação abre a lista completa de leituras daquele equipamento.</p>
+                <div class="callout root">
+                    <i class="fa fa-lock"></i>
+                    <div>Os campos de consistência só ficam editáveis para perfis com permissão de edição. Perfis de "Visualização" podem consultar, mas não salvar alterações.</div>
+                </div>
+                <p><a class="voltar-topo" href="#detalhar-equipamento">↑ voltar ao topo da seção</a></p>
+            </section>
+
+            <section class="secao" id="consistencia">
+                <h2><span class="num">6</span>Consistência das Leituras</h2>
+                <p class="lead">Mesmo fluxo de qualificação de leituras da seção anterior, mas com busca global (não restrita a um único equipamento).</p>
+                <p>Em vez de abrir a partir de um equipamento específico, esta tela permite buscar leituras de <strong>todos os equipamentos</strong> por dois critérios:</p>
+                <ul>
+                    <li><strong>Por data</strong> — selecione um dia específico no calendário; use as setas para avançar/retroceder dia a dia.</li>
+                    <li><strong>Por bacia e ano</strong> — selecione a bacia e o ano desejado.</li>
+                </ul>
+                <p>A tabela de resultados e o modal de consistência são idênticos aos descritos na seção 5.4.</p>
+            </section>
+
+            <section class="secao" id="chaves">
+                <h2><span class="num">7</span>Chaves de Acesso <span class="badge-perfil"><i class="fa fa-key"></i> Perfil Administrativo Restrito</span></h2>
+                <p class="lead">Gerenciamento das chaves de ativação do aplicativo móvel DeclaraÁgua, vinculadas a um CNARH/empreendimento.</p>
+
+                <h3>7.1 Listagem</h3>
+                <p>A tabela traz: ID da chave, NU_CNARH, CPF/CNPJ, nome do usuário, empreendimento, a própria chave (identificador único), dispositivo vinculado, quantidade de interferências, e as datas de registro, ativação e expiração.</p>
+
+                <h3>7.2 Ações por linha</h3>
+                <ul>
+                    <li><i class="fa fa-clipboard"></i> <strong>Copiar link</strong> — copia para a área de transferência o link de ativação da chave.</li>
+                    <li><i class="fa fa-whatsapp" style="color:#25D366;"></i> <strong>Enviar via WhatsApp</strong> — abre um campo para informar o telefone do usuário e envia automaticamente uma mensagem com o link de ativação.</li>
+                </ul>
+
+                <h3>7.3 Adicionar Nova Chave</h3>
+                <ol>
+                    <li>Clique em <strong>Adicionar Nova Chave</strong>.</li>
+                    <li>Informe o <strong>CPF/CNPJ</strong> e/ou o <strong>NU_CNARH</strong> do empreendimento e clique em <strong>Buscar</strong>.</li>
+                    <li>Selecione o empreendimento desejado na lista de resultados.</li>
+                    <li>Clique em <strong>Criar Chave</strong>. Uma mensagem confirma o sucesso (ou exibe o motivo da falha) e a lista de chaves é atualizada automaticamente, já filtrada pelo CNARH usado.</li>
+                </ol>
+                <p><a class="voltar-topo" href="#chaves">↑ voltar ao topo da seção</a></p>
+            </section>
+
+            <section class="secao" id="identificacao">
+                <h2><span class="num">8</span>Identificação/Edição de Equipamento <span class="badge-perfil"><i class="fa fa-pencil"></i> Perfil Gestor</span></h2>
+                <p class="lead">Permite corrigir o tipo e a unidade de medida cadastrados para um equipamento.</p>
+                <p>Disponível aos perfis <strong>Gestor</strong> (Federal/ANA, TO, SP, RJ e Root), pelo botão de sliders na coluna Ações da <strong>Lista de Equipamentos</strong> (seção 4.2). O modal exibe, somente leitura: CPF/CNPJ, nome do usuário, NU_CNARH, empreendimento, nome da interferência, e o tipo/unidade atuais do equipamento.</p>
+                <p>Abaixo, selecione o <strong>novo Tipo de Equipamento</strong> e a <strong>nova Unidade do Equipamento</strong>. O botão <strong>Salvar</strong> só fica habilitado quando ambos os campos estiverem preenchidos, e pede confirmação antes de gravar a alteração.</p>
+                <div class="callout tip">
+                    <i class="fa fa-lightbulb-o"></i>
+                    <div>Ao selecionar o tipo <strong>Horímetro</strong>, a unidade é preenchida automaticamente como <strong>Horas (H)</strong>.</div>
+                </div>
+            </section>
+
+            <section class="secao" id="acessibilidade">
+                <h2><span class="num">9</span>Acessibilidade e preferências</h2>
+                <ul>
+                    <li><strong>Alto contraste</strong> — botão <i class="fa fa-adjust"></i> no cabeçalho; alterna para fundo preto com textos e bordas em amarelo, preferência salva no navegador.</li>
+                    <li><strong>Menu lateral recolhível</strong> — útil em telas menores; use o botão de menu (☰) para abrir/fechar.</li>
+                </ul>
+            </section>
+
+            <section class="secao" id="glossario">
+                <h2><span class="num">10</span>Glossário</h2>
+                <dl class="glossario">
+                    <dt>CNARH / NU_CNARH</dt>
+                    <dd>Cadastro Nacional de Usuários de Recursos Hídricos — código que identifica um usuário/empreendimento outorgado a usar água.</dd>
+                    <dt>CPF/CNPJ</dt>
+                    <dd>Documento de identificação do usuário responsável pelo empreendimento.</dd>
+                    <dt>Órgão Gestor</dt>
+                    <dd>Entidade responsável pela gestão de recursos hídricos em determinado território: ANA (federal), NATURATINS (Tocantins), SP ÁGUAS (São Paulo) e INEA (Rio de Janeiro).</dd>
+                    <dt>Interferência</dt>
+                    <dd>Ponto de uso de recursos hídricos sujeito a outorga e/ou obrigatoriedade de monitoramento (captação, lançamento etc.).</dd>
+                    <dt>Equipamento</dt>
+                    <dd>Dispositivo de medição instalado em uma interferência (hidrômetro, horímetro, medidor de vazão, bomba etc.).</dd>
+                    <dt>Leitura</dt>
+                    <dd>Valor registrado pelo equipamento, enviado pelo aplicativo móvel DeclaraÁgua.</dd>
+                    <dt>Consistência / Qualificação da leitura</dt>
+                    <dd>Processo de validação de uma leitura bruta pelo órgão gestor, podendo corrigi-la e registrar uma ocorrência.</dd>
+                    <dt>Chave de Acesso</dt>
+                    <dd>Código de ativação que vincula o aplicativo móvel de um usuário a um CNARH/empreendimento específico.</dd>
+                </dl>
+            </section>
+
+            <p style="text-align:center; color:var(--muted); font-size:12px; margin-top:30px;">
+                Declara Água Gerencial — Manual do Usuário · <a href="index.html" style="color:var(--navy);">Voltar à aplicação</a>
+            </p>
+        </main>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,567 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Inter',sans-serif;
+    background:
+    linear-gradient(
+        135deg,
+        #edf2f7,
+        #dce8f6
+    );
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:30px;
+}
+
+.container{
+    width:1200px;
+    max-width:100%;
+    min-height:720px;
+    background:#fff;
+    border-radius:28px;
+    overflow:hidden;
+    display:flex;
+    box-shadow:
+    0 20px 60px rgba(0,0,0,.08);
+}
+
+.left{
+    width:50%;
+    background:#fff;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:50px;
+}
+
+.form-wrapper{
+    width:100%;
+    max-width:460px;
+}
+
+.logo-area{
+    text-align:center;
+    margin-bottom:12px;
+}
+
+.logo-area img{
+    width:180px;
+}
+
+/* =====================================
+   TITLES
+===================================== */
+
+.title{
+    font-size:42px;
+    font-weight:800;
+    color:#1f2937;
+    margin-bottom:16px;
+    line-height:1.1;
+}
+
+.subtitle{
+    margin-top: 40px;
+    font-size:18px;
+    color:#6b7280;
+    margin-bottom:15px;
+}
+
+/* =====================================
+   FORM
+===================================== */
+
+.form-group{
+    margin-bottom:24px;
+}
+
+.form-group label{
+    display:block;
+    margin-bottom:10px;
+    color:#1f2937;
+    font-size:16px;
+    font-weight:700;
+}
+
+.input-box{
+    position:relative;
+}
+
+.input-box input{
+    width:100%;
+    height:64px;
+    border-radius:16px;
+    border:2px solid #dbe4ef;
+    padding:0 20px;
+    font-size:18px;
+    outline:none;
+    transition:.3s;
+}
+
+.input-box input:focus{
+    border-color:#2f6fe0;
+    box-shadow:
+    0 0 0 5px rgba(47,111,224,.15);
+}
+
+.toggle-password{
+    position:absolute;
+    right:20px;
+    top:50%;
+    transform:translateY(-50%);
+    cursor:pointer;
+    font-size:20px;
+    color:#6b7280;
+}
+
+/* =====================================
+   OPTIONS
+===================================== */
+
+.options{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:30px;
+}
+
+.remember{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:#6b7280;
+    font-size:15px;
+}
+
+.options a{
+    color:#2f6fe0;
+    text-decoration:none;
+    font-weight:600;
+    font-size:15px;
+}
+
+/* =====================================
+   BUTTON
+===================================== */
+
+.login-btn{
+
+    width:100%;
+
+    height:66px;
+
+    border:none;
+
+    border-radius:16px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #3d83ef,
+        #1c3782
+    );
+
+    color:#fff;
+
+    font-size:20px;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+    box-shadow:
+    0 15px 35px rgba(28,55,130,.30);
+
+}
+
+.login-btn:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:
+    0 20px 45px rgba(28,55,130,.45);
+
+}
+
+.login-btn:disabled{
+
+    opacity:.45;
+
+    filter:grayscale(.3);
+
+    cursor:not-allowed;
+
+    transform:none;
+
+    box-shadow:none;
+
+}
+
+/* =====================================
+   FOOTER
+===================================== */
+
+.footer-links{
+
+    margin-top:34px;
+
+    text-align:center;
+
+    color:#7b8794;
+
+    line-height:1.8;
+
+    font-size:14px;
+
+}
+
+.footer-links a{
+
+    color:#2f6fe0;
+
+    text-decoration:none;
+
+}
+
+.copyright{
+
+    margin-top:16px;
+
+}
+
+/* =====================================
+   RIGHT
+===================================== */
+
+.right{
+    width:50%;
+    background:
+    linear-gradient(
+        150deg,
+        #3d83ef 0%,
+        #2f6fe0 48%,
+        #1c3782 100%
+    );
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    padding:30px;
+}
+
+/* =====================================
+   GLASS CARD
+===================================== */
+
+.glass-card{
+
+    width:100%;
+    max-width:560px;
+
+    border-radius:32px;
+
+    background:
+    rgba(255,255,255,.08);
+
+    border:
+    1px solid rgba(255,255,255,.2);
+
+    backdrop-filter:blur(12px);
+
+    padding:40px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    text-align:center;
+
+    color:#fff;
+
+    position:relative;
+
+    overflow:hidden;
+
+}
+
+.glass-card::before{
+
+    content:'';
+
+    position:absolute;
+
+    width:900px;
+    height:300px;
+
+    background:
+    rgba(255,255,255,.12);
+
+    border-radius:50%;
+
+    bottom:-220px;
+
+    pointer-events:none;
+
+}
+
+/* =====================================
+   CAROUSEL
+===================================== */
+
+.carousel{
+
+    width:100%;
+
+    position:relative;
+
+}
+
+.slide{
+
+    display:none;
+
+    animation:fade .7s ease;
+
+}
+
+.slide.active{
+
+    display:flex;
+
+    flex-direction:column;
+    align-items:center;
+
+}
+
+@keyframes fade{
+
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+
+}
+
+/* =====================================
+   DASHBOARD IMAGE
+===================================== */
+
+.dashboard-image{
+
+    width:100%;
+
+    max-width:420px;
+
+    margin-bottom:30px;
+
+    animation:float 4s ease-in-out infinite;
+
+    filter:
+    drop-shadow(
+        0 20px 40px rgba(0,0,0,.18)
+    );
+
+}
+
+@keyframes float{
+
+    0%{
+        transform:translateY(0);
+    }
+
+    50%{
+        transform:translateY(-12px);
+    }
+
+    100%{
+        transform:translateY(0);
+    }
+
+}
+
+/* =====================================
+   RIGHT TEXT
+===================================== */
+
+.glass-card h2{
+
+    font-size:38px;
+
+    line-height:1.2;
+
+    margin-bottom:18px;
+
+}
+
+.glass-card p{
+
+    font-size:18px;
+
+    line-height:1.7;
+
+    max-width:420px;
+
+    color:
+    rgba(255,255,255,.92);
+
+}
+
+/* =====================================
+   DOTS
+===================================== */
+
+.dots{
+
+    display:flex;
+
+    gap:14px;
+
+    margin-top:32px;
+
+}
+
+.dot{
+
+    width:14px;
+    height:14px;
+
+    border-radius:50%;
+
+    background:
+    rgba(255,255,255,.4);
+
+    transition:.3s;
+
+    cursor:pointer;
+
+}
+
+.dot.active{
+
+    width:44px;
+
+    border-radius:30px;
+
+    background:#fff;
+
+}
+
+/* =====================================
+   RESPONSIVE
+===================================== */
+
+@media(max-width:1100px){
+
+    .container{
+
+        flex-direction:column;
+
+    }
+
+    .left,
+    .right{
+
+        width:100%;
+
+    }
+
+}
+
+@media(max-width:768px){
+
+    body{
+
+        padding:10px;
+
+    }
+
+    .left{
+
+        padding:40px 24px;
+
+    }
+
+    .title{
+        font-size:34px;
+    }
+
+    .subtitle{
+
+        font-size:16px;
+
+    }
+
+    .glass-card{
+
+        padding:30px;
+
+    }
+
+    .glass-card h2{
+
+        font-size:30px;
+
+    }
+
+    .glass-card p{
+
+        font-size:16px;
+
+    }
+
+}
+
+/* =====================================
+   BOTÃO VOLTAR (recuperação de senha)
+===================================== */
+
+.btn-voltar {
+    width: 100%;
+    height: 52px;
+    border: 2px solid #dbe4ef;
+    border-radius: 16px;
+    background: transparent;
+    color: #6b7280;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .3s;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-voltar:hover {
+    border-color: #2f6fe0;
+    color: #2f6fe0;
+    transform: translateY(-1px);
+}
+
+/* =====================================
+   TOASTR CUSTOMIZATION
+===================================== */
+#toast-container > div {
+    width: 450px !important; /* Aumenta a largura da caixa (o padrão é 300px) */
+    font-size: 14px !important; /* Tamanho da fonte */
+    padding: 15px 15px 15px 45px !important; /* Espaçamento interno maior */
+    border-radius: 12px !important; /* Bordas mais arredondadas */
+    opacity: 1 !important; /* Impede que fique meio transparente quando não está com o mouse em cima */
+}
