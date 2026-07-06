@@ -1,11 +1,185 @@
+var _CACHE_PREFIX_EQUIP = 'gerencial_equip_cache_v1_';
+var _CACHE_TTL_EQUIP    = 15 * 60 * 1000; // 15 minutos
+
+// Mapeia o perfil ativo (cookie) para o org_nm travado no perfil do usuário
+var PERFIS_ORG_EQUIP = { 765: 'ANA', 766: 'NATURATINS', 767: 'ANA', 768: 'SP AGUAS', 769: 'NATURATINS', 770: 'SP AGUAS', 771: 'INEA', 772: 'INEA', 773: 'ANA' };
+
+function _orgTravadoEquip() {
+    const match       = document.cookie.match(new RegExp('(?:^|;\\s*)__Perfil_Ativo=([^;]*)'));
+    const perfilAtivo = match ? decodeURIComponent(match[1]) : null;
+    return (perfilAtivo && PERFIS_ORG_EQUIP[perfilAtivo]) ? PERFIS_ORG_EQUIP[perfilAtivo] : null;
+}
+
+function _lerCacheEquip(cacheKey) {
+    try {
+        const raw = localStorage.getItem(cacheKey);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        if ((Date.now() - data.ts) < _CACHE_TTL_EQUIP) return data.items;
+    } catch (e) { /* ignore */ }
+    return null;
+}
+
+function _salvarCacheEquip(cacheKey, items) {
+    try {
+        localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), items: items }));
+    } catch (e) { /* ignore QuotaExceededError */ }
+}
+
+function _setStatusBarEquip(visivel, texto) {
+    const bar  = document.getElementById('equip-status-bar');
+    const text = document.getElementById('equip-status-text');
+    if (!bar) return;
+    bar.style.display = visivel ? 'flex' : 'none';
+    if (visivel && texto && text) text.textContent = texto;
+}
+
+function _setCarregandoEquip(ativo) {
+    const btnBusc = document.getElementById('equip_btn_buscar');
+    const btnLimp = document.getElementById('equip_btn_limpar');
+    if (btnBusc) btnBusc.disabled = ativo;
+    if (btnLimp) btnLimp.disabled = ativo;
+    if (ativo) _setStatusBarEquip(true, 'Carregando equipamentos, aguarde...');
+    else       _setStatusBarEquip(false);
+}
+
+// Monta a URL de carga total (sem filtros de usuário, exceto o órgão travado pelo perfil)
+function _montarUrlCargaTotal(orgTravado, limit, offset) {
+    let url = "https://ows.snirh.gov.br/ords/prd11/servicos/declara_agua_gerencial/pesquisar_equipamento";
+    url += "?in_nome_usr=%"
+        + "&in_cpf_cnpj=%"
+        + "&in_nm_equip=%"
+        + "&in_nm_bacia=%"
+        + "&in_int_cd=%"
+        + "&in_nm_emp=%"
+        + "&in_nu_cnarh=%"
+        + "&in_min_leitura=0"
+        + "&in_min_atraso=0"
+        + "&in_nm_org=" + (orgTravado || '%')
+        + "&in_nm_corpohidrico=%"
+        + "&in_tp_equipamento=%";
+    if (limit != null) url += "&limit=" + limit + "&offset=" + (offset || 0);
+    return url;
+}
+
+function _mostrarSkeletonEquip() {
+    const tabela = document.getElementById("tb_leituras_gerencial");
+    if ($.fn.DataTable.isDataTable('#tb_leituras_gerencial')) {
+        $('#tb_leituras_gerencial').DataTable().destroy();
+    }
+    const tbody = tabela.tBodies[0] || tabela.createTBody();
+    while (tbody.rows.length > 0) tbody.deleteRow(0);
+
+    const widths = ['20px','40px','140px','60px','70px','100px','90px','160px','70px','200px','60px','100px','130px','100px'];
+    for (let r = 0; r < 10; r++) {
+        const tr = document.createElement('tr');
+        widths.forEach(function (w) {
+            const td  = document.createElement('td');
+            td.style.textAlign    = 'center';
+            td.style.paddingTop   = '10px';
+            td.style.paddingBottom= '10px';
+            const div = document.createElement('div');
+            div.className   = 'sk-cell';
+            div.style.width = w;
+            td.appendChild(div);
+            tr.appendChild(td);
+        });
+        for (let c = 0; c < 2; c++) {
+            const tdHidden = document.createElement('td');
+            tdHidden.style.display = 'none';
+            tr.appendChild(tdHidden);
+        }
+        const tdAcoes  = document.createElement('td');
+        tdAcoes.style.textAlign = 'center';
+        const divAcoes = document.createElement('div');
+        divAcoes.className   = 'sk-cell';
+        divAcoes.style.width = '60px';
+        tdAcoes.appendChild(divAcoes);
+        tr.appendChild(tdAcoes);
+        tbody.appendChild(tr);
+    }
+}
+
+// Fase 1: busca só os primeiros 10 registros (cache-first). Retorna true se a carga já está completa.
+async function _carregarInicialEquip() {
+    const orgTravado = _orgTravadoEquip();
+    const cacheKey    = _CACHE_PREFIX_EQUIP + (orgTravado || 'ALL');
+
+    const cached = _lerCacheEquip(cacheKey);
+    if (cached) {
+        renderizar(cached);
+        setTimeout(function () { _refrescarCacheBackgroundEquip(orgTravado, cacheKey); }, 200);
+        return true;
+    }
+
+    try {
+        const resp1 = await fetch(_montarUrlCargaTotal(orgTravado, 10, 0));
+        if (!resp1.ok) throw new Error("Status " + resp1.status);
+        const json1 = await resp1.json();
+        const items1 = json1.items || [];
+        renderizar(items1);
+        if (!json1.hasMore) {
+            _salvarCacheEquip(cacheKey, items1);
+            return true;
+        }
+        return false;
+    } catch (e) {
+        console.error("Erro ao carregar equipamentos:", e);
+        renderizar([]);
+        return true;
+    }
+}
+
+// Fase 2: carrega o restante do dataset em background e atualiza a tabela
+async function _carregarRestanteBackgroundEquip() {
+    const orgTravado = _orgTravadoEquip();
+    const cacheKey    = _CACHE_PREFIX_EQUIP + (orgTravado || 'ALL');
+    try {
+        const resp = await fetch(_montarUrlCargaTotal(orgTravado, null, null));
+        if (!resp.ok) throw new Error("Status " + resp.status);
+        const json  = await resp.json();
+        const items = json.items || [];
+
+        renderizar(items);
+        _salvarCacheEquip(cacheKey, items);
+
+        _setStatusBarEquip(true, items.length + ' equipamentos carregados.');
+        setTimeout(function () { _setStatusBarEquip(false); }, 2500);
+    } catch (e) {
+        console.error("Erro no carregamento em background:", e);
+        _setStatusBarEquip(false);
+    }
+}
+
+// Atualiza o cache em background sem tocar na UI (para cache expirado/próximo do vencimento)
+async function _refrescarCacheBackgroundEquip(orgTravado, cacheKey) {
+    try {
+        const resp = await fetch(_montarUrlCargaTotal(orgTravado, null, null));
+        if (!resp.ok) return;
+        const json  = await resp.json();
+        _salvarCacheEquip(cacheKey, json.items || []);
+    } catch (e) { /* ignore */ }
+}
+
 async function initial() {
-    await Promise.all([
+    _setCarregandoEquip(true);
+    _mostrarSkeletonEquip();
+
+    const resultados = await Promise.all([
         popular_orgao(),
         popular_bacia(),
         popular_corpohidrico(),
         popular_tipo_equipamento(),
-        buscar()
+        _carregarInicialEquip()
     ]);
+    const carregamentoCompleto = resultados[4];
+
+    _setCarregandoEquip(false);
+
+    if (!carregamentoCompleto) {
+        _setStatusBarEquip(true, 'Carregando dados completos...');
+        _carregarRestanteBackgroundEquip(); // fire-and-forget
+    }
 }
 
 async function popular_orgao() {
@@ -134,13 +308,9 @@ async function buscar() {
     let   tp_equipamento = document.getElementById("tp_equipamento").value;
 
     // Trava o órgão pelo perfil ativo
-    const match      = document.cookie.match(new RegExp('(?:^|;\\s*)__Perfil_Ativo=([^;]*)'));
-    const perfilAtivo= match ? decodeURIComponent(match[1]) : null;
-    const PERFIS_ORG = { 765: 'ANA', 766: 'NATURATINS', 767: 'ANA', 768: 'SP AGUAS', 769: 'NATURATINS', 770: 'SP AGUAS', 771: 'INEA', 772: 'INEA', 773: 'ANA' };
-    let   nm_org     = (perfilAtivo && PERFIS_ORG[perfilAtivo]) ? PERFIS_ORG[perfilAtivo] : '%';
+    let nm_org = _orgTravadoEquip() || '%';
 
     if (nm_bacia      === '0' || nm_bacia      === 'Selecione uma Opção') nm_bacia      = '%';
-    if (nm_org        === '0') nm_org        = '%';
     if (nm_corpohidrico === '0') nm_corpohidrico = '%';
     if (tp_equipamento  === '0') tp_equipamento  = '%';
 
@@ -183,6 +353,10 @@ async function main(nome_usr, cpf_cnpj, nm_equip, nm_bacia, int_cd, nm_emp, nu_c
         console.error("Erro ao carregar equipamentos:", e);
     }
 
+    renderizar(items);
+}
+
+function renderizar(items) {
     const tabela = document.getElementById("tb_leituras_gerencial");
 
     if ($.fn.DataTable.isDataTable('#tb_leituras_gerencial')) {

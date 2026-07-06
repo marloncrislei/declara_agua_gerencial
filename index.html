@@ -1284,7 +1284,7 @@
             0%   { background-position: 100% 50%; }
             100% { background-position: -100% 50%; }
         }
-        #int-status-bar {
+        #int-status-bar, #equip-status-bar {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -1297,7 +1297,7 @@
             font-weight: 500;
             margin: 0 0 8px 0;
         }
-        #int-status-bar .int-status-spinner {
+        #int-status-bar .int-status-spinner, #equip-status-bar .int-status-spinner {
             width: 17px;
             height: 17px;
             border: 2px solid #c7d3f5;
@@ -1561,12 +1561,20 @@
                         </article>
                         <footer class="panel-footer b-t clearfix">
                             <div style="display:flex; justify-content:flex-end; flex-wrap:wrap; gap:8px; padding:4px 0;">
-                                <button type="button" onclick="limpar()" class="btn-int-acao"><i class="fa fa-eraser"></i> Limpar Pesquisa</button>
-                                <button type="submit" onclick="buscar()" class="btn-int-acao"><i class="fa fa-search"></i> Buscar</button>
+                                <button type="button" id="equip_btn_limpar" onclick="limpar()" class="btn-int-acao"><i class="fa fa-eraser"></i> Limpar Pesquisa</button>
+                                <button type="submit" id="equip_btn_buscar" onclick="buscar()" class="btn-int-acao"><i class="fa fa-search"></i> Buscar</button>
                             </div>
                         </footer>
                         </div><!-- /#filtros-collapsible -->
                     </section>
+                </div>
+
+                <!-- Status de carregamento -->
+                <div class="col-md-12">
+                    <div id="equip-status-bar" style="display:none;">
+                        <div class="int-status-spinner"></div>
+                        <span id="equip-status-text">Carregando equipamentos, aguarde...</span>
+                    </div>
                 </div>
 
                 <!-- Tabela -->
@@ -2265,9 +2273,14 @@
                             <section class="panel panel-default" style="margin-bottom:0; height:100%;">
                                 <header class="panel-heading" style="background-color:#e9efff; padding:8px 12px; display:flex; align-items:center; justify-content:space-between;">
                                     <h2 class="panel-title h5" style="margin:0; font-size:13px;">Calendário de Leituras</h2>
-                                    <button type="button" class="btn btn-xs btn-default" onclick="equip_baixarGrafico()" title="Baixar gráfico como imagem">
-                                        <i class="fa fa-download"></i> Baixar
-                                    </button>
+                                    <div style="display:flex; gap:6px;">
+                                        <button type="button" class="btn btn-xs btn-default" onclick="equip_abrirGraficoModal()" title="Expandir gráfico">
+                                            <i class="fa fa-expand"></i> Expandir
+                                        </button>
+                                        <button type="button" class="btn btn-xs btn-default" onclick="equip_baixarGrafico()" title="Baixar gráfico como imagem">
+                                            <i class="fa fa-download"></i> Baixar
+                                        </button>
+                                    </div>
                                 </header>
                                 <article class="panel-body" style="padding:6px;">
                                     <!-- Legenda customizada -->
@@ -2349,116 +2362,160 @@
 
                     <!-- Script do gráfico -->
                     <script>
-                        function equip_drawChart() {
+                        // Agrupa as leituras por dia (menor status prevalece) e monta a DataTable do calendario
+                        function _equip_prepararDadosCalendario() {
                             var leituras = window._equip_dados_grafico || [];
-                            if (!leituras.length) return;
+                            if (!leituras.length) return null;
 
+                            var dataTable = new google.visualization.DataTable();
+                            dataTable.addColumn({ type: 'date',   id: 'Date'   });
+                            dataTable.addColumn({ type: 'number', id: 'Status' });
+
+                            // Agrupa por dia: se qualquer leitura do dia nao foi consistida -> 1 (azul)
+                            // So recebe 2 (verde) quando TODAS as leituras do dia tem dt_qualificacao
+                            var dayMap = {};
+                            leituras.forEach(function (l) {
+                                var d = l.dt_leitura;
+                                if (!d) return;
+                                var key     = d.substring(0, 10); // dd/mm/yyyy
+                                var dateObj = new Date(d.substring(6,10), d.substring(3,5)-1, d.substring(0,2));
+                                var status  = (l.dt_qualificacao != null && l.dt_qualificacao !== '') ? 2 : 1;
+                                // Mantem o menor status do dia (1 prevalece sobre 2)
+                                if (!dayMap[key] || status < dayMap[key].status) {
+                                    dayMap[key] = { date: dateObj, status: status };
+                                }
+                            });
+
+                            var rows = Object.keys(dayMap).map(function (k) {
+                                return [dayMap[k].date, dayMap[k].status];
+                            });
+                            if (!rows.length) return null;
+                            dataTable.addRows(rows);
+
+                            var anos    = rows.map(function (r) { return r[0].getFullYear(); });
+                            var anosSet = anos.filter(function (v, i, a) { return a.indexOf(v) === i; });
+                            var qtdAnos = anosSet.length > 1
+                                ? Math.max.apply(null, anosSet) - Math.min.apply(null, anosSet) + 1
+                                : 1;
+
+                            return { dataTable: dataTable, qtdAnos: qtdAnos };
+                        }
+
+                        // Clique em um dia do grafico -> abre o modal da ultima leitura daquele dia
+                        function _equip_onDiaSelecionado(chart) {
+                            var sel = chart.getSelection();
+                            if (!sel || !sel.length || !sel[0].date) return;
+
+                            // Google Charts retorna UTC midnight - usa getUTC* para evitar offset de fuso
+                            var d       = new Date(sel[0].date);
+                            var dia     = d.getUTCDate();
+                            var mes     = d.getUTCMonth() + 1;
+                            var ano     = d.getUTCFullYear();
+                            var dateStr = String(dia).padStart(2,'0') + '/' + String(mes).padStart(2,'0') + '/' + ano;
+
+                            // Ultima leitura do dia na tabela (pode haver mais de uma por dia)
+                            var tbody = document.querySelector('#tb_leituras_equip tbody');
+                            if (!tbody) return;
+                            var lastIdx = -1;
+                            for (var j = 0; j < tbody.children.length; j++) {
+                                var cell = tbody.children[j].cells[2];
+                                if (cell && cell.innerHTML.substring(0, 10) === dateStr) lastIdx = j;
+                            }
+                            if (lastIdx === -1) return;
+
+                            window._activeView = 'equipamento';
+                            id_tab = lastIdx;
+                            if (document.getElementById('list_ocorrencia').options.length <= 1) {
+                                equip_popular_ocorrencias();
+                            }
+                            popularModal(lastIdx);
+                            if (typeof window._openEquipModal === 'function') window._openEquipModal();
+                        }
+
+                        // Desenha o calendario no container informado.
+                        // cellSize/alturaPorAno maiores => visao expandida (usado pelo modal).
+                        function _equip_desenharCalendario(containerId, cellSize, alturaPorAno, maxAltura) {
+                            var el = document.getElementById(containerId);
+                            if (!el) return null;
+
+                            var dados = _equip_prepararDadosCalendario();
+                            if (!dados) return null;
+
+                            var altura = dados.qtdAnos * alturaPorAno + 30;
+
+                            var chart = new google.visualization.Calendar(el);
+                            chart.draw(dados.dataTable, {
+                                height: altura,
+                                calendar: { cellSize: cellSize, daysOfWeek: 'DSTQQSS' },
+                                legend:   { position: 'none' },
+                                colorAxis: { values: [1, 2], colors: ['#f0ad4e', '#27ae60'] }
+                            });
+
+                            google.visualization.events.addListener(chart, 'select', function () {
+                                _equip_onDiaSelecionado(chart);
+                            });
+
+                            google.visualization.events.addListener(chart, 'ready', function () {
+                                var container = el.parentElement;
+                                var svg = el.getElementsByTagName('svg')[0];
+                                if (container && svg) {
+                                    // Altura real do SVG apos renderizacao
+                                    var realH = svg.getBoundingClientRect().height
+                                             || parseFloat(svg.getAttribute('height'))
+                                             || altura;
+                                    // Ajusta o container ao tamanho exato (sem espaco em branco)
+                                    container.style.height    = Math.min(realH, maxAltura) + 'px';
+                                    container.style.maxHeight = maxAltura + 'px';
+
+                                    // Rola para o final para exibir o ano mais recente
+                                    container.scrollTop = container.scrollHeight;
+
+                                    // No modal expandido, a largura do dialogo acompanha a largura real do
+                                    // grafico (que varia com o zoom), evitando espaco vazio quando reduzido.
+                                    if (containerId === 'calendar_basic_equip_modal') {
+                                        var realW = svg.getBoundingClientRect().width || parseFloat(svg.getAttribute('width')) || 0;
+                                        var $dialog = $('#graficoEquipModal .modal-dialog');
+                                        if (realW && $dialog.length) {
+                                            var largura = Math.max(460, Math.min(realW + 60, window.innerWidth * 0.95));
+                                            $dialog.css({ width: largura + 'px', maxWidth: 'none' });
+                                        }
+                                    }
+                                }
+                            });
+
+                            return chart;
+                        }
+
+                        function equip_drawChart() {
+                            if (!(window._equip_dados_grafico || []).length) return;
                             google.charts.setOnLoadCallback(function () {
-                                var dataTable = new google.visualization.DataTable();
-                                dataTable.addColumn({ type: 'date',   id: 'Date'   });
-                                dataTable.addColumn({ type: 'number', id: 'Status' });
-
-                                // Agrupa por dia: se qualquer leitura do dia não foi consistida → 1 (azul)
-                                // Só recebe 2 (verde) quando TODAS as leituras do dia têm dt_qualificacao
-                                var dayMap = {};
-                                leituras.forEach(function (l) {
-                                    var d = l.dt_leitura;
-                                    if (!d) return;
-                                    var key    = d.substring(0, 10); // dd/mm/yyyy
-                                    var dateObj = new Date(d.substring(6,10), d.substring(3,5)-1, d.substring(0,2));
-                                    var status = (l.dt_qualificacao != null && l.dt_qualificacao !== '') ? 2 : 1;
-                                    // Mantém o menor status do dia (1 prevalece sobre 2)
-                                    if (!dayMap[key] || status < dayMap[key].status) {
-                                        dayMap[key] = { date: dateObj, status: status };
-                                    }
-                                });
-
-                                var rows = Object.keys(dayMap).map(function(k) {
-                                    return [dayMap[k].date, dayMap[k].status];
-                                });
-
-                                if (!rows.length) return;
-                                dataTable.addRows(rows);
-
-                                var anos    = rows.map(function(r){ return r[0].getFullYear(); });
-                                var anosSet = anos.filter(function(v,i,a){ return a.indexOf(v)===i; });
-                                var qtdAnos = anosSet.length > 1
-                                    ? Math.max.apply(null,anosSet) - Math.min.apply(null,anosSet) + 1
-                                    : 1;
-                                var altura = qtdAnos * 120 + 30;
-
-                                var chart = new google.visualization.Calendar(document.getElementById('calendar_basic_equip'));
-                                window._equip_chart = chart;
-
-                                chart.draw(dataTable, {
-                                    height: altura,
-                                    calendar: { cellSize: 13, daysOfWeek: 'DSTQQSS' },
-                                    legend:   { position: 'none' },
-                                    colorAxis: { values: [1, 2], colors: ['#f0ad4e', '#27ae60'] }
-                                });
-
-                                // Clique em um dia do gráfico → abre o modal da última leitura daquele dia
-                                google.visualization.events.addListener(chart, 'select', function () {
-                                    var sel = chart.getSelection();
-                                    if (!sel || !sel.length || !sel[0].date) return;
-
-                                    // Google Charts retorna UTC midnight — usa getUTC* para evitar offset de fuso
-                                    var d       = new Date(sel[0].date);
-                                    var dia     = d.getUTCDate();
-                                    var mes     = d.getUTCMonth() + 1;
-                                    var ano     = d.getUTCFullYear();
-                                    var dateStr = String(dia).padStart(2,'0') + '/' + String(mes).padStart(2,'0') + '/' + ano;
-
-                                    // Última leitura do dia na tabela (pode haver mais de uma por dia)
-                                    var tbody   = document.querySelector('#tb_leituras_equip tbody');
-                                    if (!tbody) return;
-                                    var lastIdx = -1;
-                                    for (var j = 0; j < tbody.children.length; j++) {
-                                        var cell = tbody.children[j].cells[2];
-                                        if (cell && cell.innerHTML.substring(0, 10) === dateStr) lastIdx = j;
-                                    }
-                                    if (lastIdx === -1) return;
-
-                                    window._activeView = 'equipamento';
-                                    id_tab = lastIdx;
-                                    if (document.getElementById('list_ocorrencia').options.length <= 1) {
-                                        equip_popular_ocorrencias();
-                                    }
-                                    popularModal(lastIdx);
-                                    if (typeof window._openEquipModal === 'function') window._openEquipModal();
-                                });
-
-                                google.visualization.events.addListener(chart, 'ready', function () {
-                                    var c   = document.getElementById('container_grafico_equip');
-                                    var svg = document.getElementById('calendar_basic_equip')
-                                                       .getElementsByTagName('svg')[0];
-                                    if (c && svg) {
-                                        // Altura real do SVG após renderização
-                                        var realH = svg.getBoundingClientRect().height
-                                                 || parseFloat(svg.getAttribute('height'))
-                                                 || altura;
-                                        // Ajusta o container ao tamanho exato (sem espaço em branco)
-                                        var maxH = 290;
-                                        c.style.height    = Math.min(realH, maxH) + 'px';
-                                        c.style.maxHeight = maxH + 'px';
-
-                                        // Rola para o final para exibir o ano mais recente
-                                        c.scrollTop = c.scrollHeight;
-                                    }
-                                });
-
-
-
-
-
+                                window._equip_chart = _equip_desenharCalendario('calendar_basic_equip', 13, 120, 290);
                             });
                         }
                         window.equip_drawChart = equip_drawChart;
 
-                        function equip_baixarGrafico() {
-                            var container = document.getElementById('calendar_basic_equip');
+                        // Abre o calendario em um modal maior, com controle dinamico do tamanho da celula
+                        function equip_abrirGraficoModal() {
+                            if (!(window._equip_dados_grafico || []).length) {
+                                if (typeof toastr !== 'undefined') toastr.warning('Nao ha dados de leituras para exibir.');
+                                else alert('Nao ha dados de leituras para exibir.');
+                                return;
+                            }
+                            if (typeof window._abrirModalGrafico === 'function') window._abrirModalGrafico();
+                            google.charts.setOnLoadCallback(function () {
+                                if (typeof window._equip_redesenharModalZoom === 'function') {
+                                    window._equip_redesenharModalZoom();
+                                } else {
+                                    window._equip_chart_modal = _equip_desenharCalendario('calendar_basic_equip_modal', 10, 92, 650);
+                                }
+                            });
+                        }
+
+                        function equip_baixarGrafico(containerId, nomeArquivo) {
+                            containerId = containerId || 'calendar_basic_equip';
+                            var container = document.getElementById(containerId);
                             var svg = container ? container.getElementsByTagName('svg')[0] : null;
-                            if (!svg) { alert("Gráfico ainda não carregado."); return; }
+                            if (!svg) { alert("Grafico ainda nao carregado."); return; }
                             try {
                                 var s = new XMLSerializer().serializeToString(svg);
                                 if (!s.match(/xmlns=/)) s = s.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
@@ -2474,24 +2531,204 @@
                                     ctx.drawImage(img, 0, 0);
                                     var a = document.createElement('a');
                                     a.href = c.toDataURL('image/png');
-                                    a.download = 'leituras_' + (window._selectedIdEquipamento||'equip') + '.png';
+                                    a.download = (nomeArquivo || ('leituras_' + (window._selectedIdEquipamento||'equip'))) + '.png';
                                     document.body.appendChild(a); a.click(); document.body.removeChild(a);
                                     URL.revokeObjectURL(url);
                                 };
                                 img.onerror = function () {
                                     var a = document.createElement('a');
-                                    a.href = url; a.download = 'leituras.svg';
+                                    a.href = url; a.download = (nomeArquivo || 'leituras') + '.svg';
                                     document.body.appendChild(a); a.click(); document.body.removeChild(a);
                                 };
                                 img.src = url;
-                            } catch(e) { alert("Não foi possível gerar a imagem."); }
+                            } catch(e) { alert("Nao foi possivel gerar a imagem."); }
                         }
+                    </script>
+
+                    <!-- Modal: grafico expandido -->
+                    <div class="modal fade" id="graficoEquipModal" tabindex="-1" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog" style="width:90%; max-width:1100px;">
+                            <div class="modal-content">
+                                <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between;">
+                                    <h4 class="modal-title" style="font-weight:bold; margin:0;">Calendario de Leituras</h4>
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                </div>
+                                <div class="modal-body">
+                                    <div style="display:flex; gap:16px; padding:2px 4px 10px; font-size:12px; color:#444;">
+                                        <span style="display:flex; align-items:center; gap:5px;">
+                                            <span style="display:inline-block; width:13px; height:13px; background:#f0ad4e; border-radius:2px;"></span>
+                                            Leitura nao consistida
+                                        </span>
+                                        <span style="display:flex; align-items:center; gap:5px;">
+                                            <span style="display:inline-block; width:13px; height:13px; background:#27ae60; border-radius:2px;"></span>
+                                            Leitura consistida
+                                        </span>
+                                    </div>
+                                    <div id="container_grafico_equip_modal" style="overflow:auto; max-height:650px;">
+                                        <div id="calendar_basic_equip_modal"></div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer" style="display:flex; align-items:center; justify-content:flex-start; gap:18px;">
+                                    <div class="grafico-zoom-control">
+                                        <label for="grafico_modal_zoom">Zoom do Gráfico</label>
+                                        <input type="range" id="grafico_modal_zoom" min="6" max="24" step="1" value="10">
+                                        <span id="grafico_modal_zoom_valor" class="grafico-zoom-valor">10px</span>
+                                    </div>
+                                    <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
+                                        <button type="button" class="btn btn-default" onclick="equip_baixarGrafico('calendar_basic_equip_modal', 'leituras_expandido')" title="Baixar gráfico como imagem">
+                                            <i class="fa fa-download"></i> Baixar
+                                        </button>
+                                        <a href="#" class="btn btn-default" data-dismiss="modal"><i class="fa fa-long-arrow-left"></i> Fechar</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- /#graficoEquipModal -->
+
+                    <script>
+                        (function () {
+                            var _graficoModalBackdrop = null;
+                            var _FADE_GRAFICO = 300;
+                            var _zoomDebounce = null;
+                            var $zoomSlider = $('#grafico_modal_zoom');
+                            var $zoomValor  = $('#grafico_modal_zoom_valor');
+
+                            // Preenche visualmente a trilha do slider até o valor atual (Chrome/Edge/Safari;
+                            // o Firefox já faz isso sozinho via ::-moz-range-progress).
+                            function _atualizarTrilhaZoom() {
+                                var el  = $zoomSlider[0];
+                                var min = parseInt(el.min, 10), max = parseInt(el.max, 10);
+                                var pct = ((parseInt(el.value, 10) - min) / (max - min)) * 100;
+                                el.style.setProperty('--zoom-pct', pct + '%');
+                            }
+
+                            // Redesenha o calendario do modal usando o tamanho de celula atual do slider.
+                            // A altura por ano acompanha o zoom, mantendo a mesma proporcao do grafico pequeno (120px a cada 13px de celula).
+                            function redesenharModalZoom() {
+                                var cellSize    = parseInt($zoomSlider.val(), 10) || 10;
+                                var alturaPorAno = Math.round(cellSize * (120 / 13));
+                                window._equip_chart_modal = _equip_desenharCalendario('calendar_basic_equip_modal', cellSize, alturaPorAno, 650);
+                            }
+                            window._equip_redesenharModalZoom = redesenharModalZoom;
+
+                            _atualizarTrilhaZoom();
+
+                            $zoomSlider.on('input', function () {
+                                $zoomValor.text(this.value + 'px');
+                                _atualizarTrilhaZoom();
+                                clearTimeout(_zoomDebounce);
+                                _zoomDebounce = setTimeout(redesenharModalZoom, 120);
+                            });
+
+                            function closeGraficoEquipModal() {
+                                var $m = $('#graficoEquipModal');
+                                $m.removeClass('in').attr('aria-hidden', 'true');
+                                $('body').removeClass('modal-open');
+                                var bd = _graficoModalBackdrop;
+                                _graficoModalBackdrop = null;
+                                setTimeout(function () {
+                                    $m.css('display', 'none');
+                                    if (bd) bd.remove();
+                                }, _FADE_GRAFICO);
+                            }
+
+                            $(document).on('click', '#graficoEquipModal [data-dismiss="modal"]', function (e) {
+                                e.preventDefault();
+                                closeGraficoEquipModal();
+                            });
+
+                            function openGraficoEquipModal() {
+                                var $m = $('#graficoEquipModal');
+                                if ($m.hasClass('in')) return;
+                                _graficoModalBackdrop = $('<div class="modal-backdrop fade"></div>');
+                                $('body').append(_graficoModalBackdrop);
+                                _graficoModalBackdrop[0].offsetWidth;
+                                _graficoModalBackdrop.addClass('in');
+                                $m.css('display', 'block').removeAttr('aria-hidden');
+                                $m[0].offsetWidth;
+                                $m.addClass('in');
+                                $('body').addClass('modal-open');
+                                _graficoModalBackdrop.one('click', closeGraficoEquipModal);
+                            }
+
+                            window._abrirModalGrafico = openGraficoEquipModal;
+                        })();
                     </script>
 
                     <style>
                         #eq-dados-table tr:nth-child(even) { background-color: #f2f5f9; }
                         #eq-dados-table tr:nth-child(odd)  { background-color: #ffffff; }
                         #eq-dados-table td { padding: 4px 8px; }
+
+                        /* ===== Slider de zoom do calendário (modal expandido) ===== */
+                        .grafico-zoom-control {
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                        }
+                        .grafico-zoom-control label {
+                            margin: 0;
+                            font-size: 12px;
+                            font-weight: 600;
+                            color: #1c3782;
+                            white-space: nowrap;
+                        }
+                        .grafico-zoom-control input[type="range"] {
+                            -webkit-appearance: none;
+                            appearance: none;
+                            width: 140px;
+                            height: 4px;
+                            border-radius: 4px;
+                            background: linear-gradient(90deg, #3b6fd6 0%, #3b6fd6 var(--zoom-pct, 22%), #dbe3fb var(--zoom-pct, 22%), #dbe3fb 100%);
+                            outline: none;
+                            cursor: pointer;
+                        }
+                        .grafico-zoom-control input[type="range"]::-webkit-slider-thumb {
+                            -webkit-appearance: none;
+                            width: 16px;
+                            height: 16px;
+                            border-radius: 50%;
+                            background: #fff;
+                            border: 2px solid #1c3782;
+                            box-shadow: 0 2px 6px rgba(28,55,130,.35);
+                            cursor: pointer;
+                            transition: transform .15s;
+                        }
+                        .grafico-zoom-control input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.15); }
+                        .grafico-zoom-control input[type="range"]::-moz-range-track {
+                            height: 4px;
+                            border-radius: 4px;
+                            background: #dbe3fb;
+                        }
+                        .grafico-zoom-control input[type="range"]::-moz-range-progress {
+                            height: 4px;
+                            border-radius: 4px;
+                            background: #3b6fd6;
+                        }
+                        .grafico-zoom-control input[type="range"]::-moz-range-thumb {
+                            width: 16px;
+                            height: 16px;
+                            border-radius: 50%;
+                            background: #fff;
+                            border: 2px solid #1c3782;
+                            box-shadow: 0 2px 6px rgba(28,55,130,.35);
+                            cursor: pointer;
+                        }
+                        .grafico-zoom-control input[type="range"]:focus-visible {
+                            outline: 3px solid rgba(28,55,130,.3);
+                            outline-offset: 3px;
+                        }
+                        .grafico-zoom-valor {
+                            font-size: 11px;
+                            font-weight: 700;
+                            color: #1c3782;
+                            background: #eef2ff;
+                            border: 1px solid #c7d3f5;
+                            border-radius: 12px;
+                            padding: 2px 9px;
+                            min-width: 32px;
+                            text-align: center;
+                        }
                     </style>
 
                     <!-- Tabela de leituras do equipamento (largura total) -->
